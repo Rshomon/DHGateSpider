@@ -1,0 +1,4 @@
+lxml==4.3.3
+openpyxl==3.0.2
+colorlog==4.2.1
+requests==2.22.0
