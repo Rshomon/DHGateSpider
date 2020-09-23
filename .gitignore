@@ -1,0 +1,4 @@
+*.xlsx
+*.txt
+_pycache_
+*.pyc
