@@ -1,2 +1,9 @@
-import os
-print(os.path.join(os.path.abspath(os.path.dirname(__name__)),"数据.xlsx"))
+import json
+def read_settings() -> None:
+    with open("settings.json") as f:
+        settings_info = json.loads(f.read())
+    print(settings_info['targetgoods'])
+
+
+if __name__ == "__main__":
+    read_settings()

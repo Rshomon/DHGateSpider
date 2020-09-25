@@ -1,3 +1,5 @@
 *.xlsx
 _pycache_
 *.pyc
+result.txt
+Target_info.txt

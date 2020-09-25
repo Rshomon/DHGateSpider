@@ -1,5 +1,5 @@
 from time import sleep
-import requests, time, logging
+import requests, json
 from lxml import etree
 import CustomLogger
 import openpyxl
@@ -26,12 +26,16 @@ class DHgate:
     keywords:要检索的商品名称
     """
     def __init__(self) -> None:
+        # 实例化->直接选择默认输入
+        settings_info = self.read_settings()
         # 日志输出
         self.logger = CustomLogger.custom().logger
         # 目标商品地址
-        self.targetgoods = self.explain()
+        # self.targetgoods = self.explain()
+        self.targetgoods = settings_info['targetgoods']
         # 检索商品名
-        self.keywords = self.searchKey()
+        # self.keywords = self.searchKey()
+        self.keywords = settings_info['keywords']
         # 目标起始地址
         self.url = "https://pt.dhgate.com/w/{keywords}/{pagenum}.html"
         # 上一页的数据
@@ -48,9 +52,16 @@ class DHgate:
             "编号",
             "价格",
         ])
-        self.page_num = self.search_page_num()
+        # self.page_num = self.search_page_num()
+        self.page_num = settings_info['page_num']
         self.index = 0
         self.filename = "数据.xlsx"
+
+    # 读入json配置信息
+    def read_settings(self) -> object:
+        with open("settings.json") as f:
+            settings_info = json.loads(f.read())
+        return settings_info
 
     # 用户输入以及简单介绍
     def explain(self) -> str:
@@ -76,9 +87,13 @@ class DHgate:
 
     # 需要检索的页数
     def search_page_num(self) -> int:
-        self.logger.warning("请输入要比对的页数：")
+        self.logger.warning("请输入要比对的页数：(如果不输入，默认为一直循环)")
         page_num = input()
-        return int(page_num)
+        # 当页数为空时默认输出
+        if page_num == "":
+            return 9999
+        else:
+            return int(page_num)
 
     # 根据网址获取目标网址商品的id
     def target_goods(self) -> str:
@@ -102,8 +117,11 @@ class DHgate:
             if int(input):
                 flag = True
         except ValueError as error:
-            slef.logger.error(f"输入类型错误-->{error}")
-            flag = False
+            if input.startswith("http"):
+                flag = True
+            else:
+                slef.logger.error(f"输入类型错误-->{error}")
+                flag = False
         return flag
 
     # 网站页数迭代
@@ -151,7 +169,7 @@ class DHgate:
 
     # 保存结果到本地
     def save_local(self, url, data_list, target_tile) -> None:
-        filename = "result.txt"
+        filename = "Target_info.txt"
         target_tile_index = 0
         for index, item in enumerate(data_list):
             if item == target_tile:
@@ -161,7 +179,9 @@ class DHgate:
             f.write(result)
         file_path = os.path.join(os.path.abspath(os.path.dirname(__name__)),
                                  filename)
-        self.logger.debug(f"当前检索id已保存在：{file_path}")
+        print("\n" * 3)
+        self.logger.debug(f"目标信息已保存在：{file_path}")
+        print("\n" * 3)
 
     # 保存Excel
     def save_excel(self, title_list, url_list, code_list, price_list) -> None:
@@ -205,7 +225,7 @@ class DHgate:
         except:
             try:
                 # 如果运行中存在异常，则直接保存现有数据
-                self.wb.save("数据.xlsx")
+                self.wb.save("product_info.xlsx")
             except PermissionError as error:
                 # 文件读取出错解决
                 self.logger.error("文件读取异常，请关闭目标文件后重新运行")
